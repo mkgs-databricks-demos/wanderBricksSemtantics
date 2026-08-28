@@ -74,7 +74,6 @@ measures:
       decimal_places:
         type: exact
         places: 2
-      prefix: "$"
     synonyms:
       - average price
       - mean price
