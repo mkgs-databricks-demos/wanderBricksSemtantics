@@ -4,7 +4,9 @@
 
 Unity Catalog Business Semantics is Databricks' answer to one of the most persistent challenges in enterprise data: **ensuring that everyone — humans, dashboards, and AI agents — speaks the same business language when interpreting data.**
 
-![Unity Catalog Semantics Architecture](../assets/uc-semantics-architecture.png)
+![Unity Catalog Semantics Architecture](../assets/ontology_reduced.gif)
+
+![UC Semantics Feature Overview](../assets/feature-01-image-new.png)
 
 ---
 
