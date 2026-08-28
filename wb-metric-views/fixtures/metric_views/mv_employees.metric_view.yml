@@ -1,0 +1,117 @@
+version: 1.1
+
+source: "samples.wanderbricks.employees"
+
+comment: "Host workforce and staffing metrics for WanderBricks vacation rental platform"
+
+dimensions:
+  - name: employee_role
+    expr: role
+    comment: Role of the employee (e.g., cleaner, chef, manager)
+    display_name: Employee Role
+    synonyms:
+      - role
+      - job title
+      - position
+
+  - name: employee_country
+    expr: country
+    comment: Country where the employee works
+    display_name: Employee Country
+    synonyms:
+      - country
+      - work location
+
+  - name: is_currently_employed
+    expr: is_currently_employed
+    comment: Whether the employee is currently active
+    display_name: Currently Employed
+    synonyms:
+      - active employee
+      - still employed
+      - current staff
+
+  - name: joined_at
+    expr: joined_at
+    comment: Date the employee started
+    display_name: Start Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - hire date
+      - employment start
+
+measures:
+  - name: total_employees
+    expr: count(employee_id)
+    comment: Total number of employees (all time)
+    display_name: Total Employees
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - employee count
+      - headcount
+      - staff count
+
+  - name: active_employees
+    expr: count_if(is_currently_employed = true)
+    comment: Number of currently employed staff
+    display_name: Active Employees
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - current headcount
+      - active staff
+      - current employees
+
+  - name: terminated_employees
+    expr: count_if(is_currently_employed = false)
+    comment: Number of employees who have left
+    display_name: Terminated Employees
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - former employees
+      - departed staff
+      - attrition count
+
+  - name: turnover_rate
+    expr: count_if(is_currently_employed = false) * 1.0 / nullif(count(employee_id), 0)
+    comment: Percentage of all-time employees who have left
+    display_name: Turnover Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - attrition rate
+      - churn rate
+      - separation rate
+
+  - name: distinct_hosts_with_staff
+    expr: count(distinct host_id)
+    comment: Number of distinct hosts who employ staff
+    display_name: Hosts With Staff
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - staffed hosts
+      - hosts with employees

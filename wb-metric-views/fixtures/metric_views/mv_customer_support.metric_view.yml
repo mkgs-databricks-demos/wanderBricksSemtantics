@@ -1,0 +1,78 @@
+version: 1.1
+
+source: "samples.wanderbricks.customer_support_logs"
+
+comment: "Customer support ticket metrics for WanderBricks vacation rental platform"
+
+dimensions:
+  - name: ticket_created_date
+    expr: cast(created_at as timestamp)
+    comment: Date and time the support ticket was created
+    display_name: Ticket Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - created date
+      - support date
+      - ticket opened
+
+measures:
+  - name: total_tickets
+    expr: count(ticket_id)
+    comment: Total number of customer support tickets
+    display_name: Total Tickets
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - ticket count
+      - support requests
+      - case count
+      - support volume
+
+  - name: distinct_customers_with_tickets
+    expr: count(distinct user_id)
+    comment: Number of unique users who contacted support
+    display_name: Customers With Tickets
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - unique support users
+      - customers needing support
+
+  - name: avg_messages_per_ticket
+    expr: avg(size(messages))
+    comment: Average number of messages exchanged per support ticket
+    display_name: Avg Messages Per Ticket
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - average ticket length
+      - messages per case
+      - conversation length
+
+  - name: distinct_support_agents
+    expr: count(distinct support_agent_id)
+    comment: Number of distinct support agents handling tickets
+    display_name: Support Agents
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - agent count
+      - support staff
+      - agents active

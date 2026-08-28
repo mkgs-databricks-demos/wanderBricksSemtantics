@@ -1,0 +1,60 @@
+version: 1.1
+
+source: "samples.wanderbricks.destinations"
+
+comment: "Destination geography metrics for WanderBricks vacation rental platform"
+
+dimensions:
+  - name: destination_name
+    expr: destination
+    comment: Name of the destination city or area
+    display_name: Destination
+    synonyms:
+      - city
+      - location
+      - area
+
+  - name: country
+    expr: country
+    comment: Country where the destination is located
+    display_name: Country
+    synonyms:
+      - destination country
+      - nation
+
+  - name: state_or_province
+    expr: state_or_province
+    comment: State, province, or region of the destination
+    display_name: State/Province
+    synonyms:
+      - region
+      - state
+      - province
+
+measures:
+  - name: total_destinations
+    expr: count(destination_id)
+    comment: Total number of destinations served by the platform
+    display_name: Total Destinations
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - destination count
+      - number of locations
+      - markets served
+
+  - name: distinct_countries
+    expr: count(distinct country)
+    comment: Number of distinct countries with destinations
+    display_name: Countries Served
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - country count
+      - geographic footprint

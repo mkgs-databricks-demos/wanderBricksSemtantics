@@ -1,0 +1,119 @@
+version: 1.1
+
+source: "samples.wanderbricks.users"
+
+comment: "Guest and user acquisition metrics for WanderBricks vacation rental platform"
+
+dimensions:
+  - name: user_type
+    expr: user_type
+    comment: Type of user account (individual or business)
+    display_name: User Type
+    synonyms:
+      - account type
+      - customer type
+      - segment
+
+  - name: user_country
+    expr: country
+    comment: Country of residence for the user
+    display_name: User Country
+    synonyms:
+      - country
+      - guest country
+      - country of origin
+
+  - name: is_business
+    expr: is_business
+    comment: Whether the user is a business account
+    display_name: Business Account
+    synonyms:
+      - business user
+      - corporate
+      - B2B
+
+  - name: created_at
+    expr: created_at
+    comment: Date the user account was created
+    display_name: Signup Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - registration date
+      - join date
+      - account created
+
+measures:
+  - name: total_users
+    expr: count(user_id)
+    comment: Total registered users on the platform
+    display_name: Total Users
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - user count
+      - registered users
+      - total guests
+
+  - name: business_users
+    expr: count_if(is_business = true)
+    comment: Number of business/corporate user accounts
+    display_name: Business Users
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - corporate accounts
+      - B2B users
+      - business accounts
+
+  - name: individual_users
+    expr: count_if(is_business = false)
+    comment: Number of individual (non-business) user accounts
+    display_name: Individual Users
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - personal accounts
+      - B2C users
+      - consumer users
+
+  - name: business_user_rate
+    expr: count_if(is_business = true) * 1.0 / nullif(count(user_id), 0)
+    comment: Percentage of users that are business accounts
+    display_name: Business User Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - B2B percentage
+      - business mix
+
+  - name: distinct_countries
+    expr: count(distinct country)
+    comment: Number of distinct countries represented by users
+    display_name: Countries Represented
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - country count
+      - geographic reach
+      - market count

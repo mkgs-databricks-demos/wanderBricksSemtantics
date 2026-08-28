@@ -1,0 +1,141 @@
+version: 1.1
+
+source: "samples.wanderbricks.hosts"
+
+comment: "Host supply-side metrics for WanderBricks vacation rental platform"
+
+dimensions:
+  - name: host_country
+    expr: country
+    comment: Country where the host is located
+    display_name: Host Country
+    synonyms:
+      - country
+      - host location
+
+  - name: is_verified
+    expr: is_verified
+    comment: Whether the host has completed verification
+    display_name: Verified Status
+    synonyms:
+      - verification status
+      - verified
+
+  - name: is_active
+    expr: is_active
+    comment: Whether the host is currently active on the platform
+    display_name: Active Status
+    synonyms:
+      - active
+      - host active
+
+  - name: joined_at
+    expr: joined_at
+    comment: Date the host joined the platform
+    display_name: Join Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - registration date
+      - signup date
+      - date joined
+
+measures:
+  - name: total_hosts
+    expr: count(host_id)
+    comment: Total number of hosts on the platform
+    display_name: Total Hosts
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - host count
+      - number of hosts
+      - supply count
+
+  - name: verified_hosts
+    expr: count_if(is_verified = true)
+    comment: Number of hosts who have completed verification
+    display_name: Verified Hosts
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - verified count
+      - verified host count
+
+  - name: verification_rate
+    expr: count_if(is_verified = true) * 1.0 / nullif(count(host_id), 0)
+    comment: Percentage of hosts that are verified
+    display_name: Verification Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - verified percentage
+      - pct verified
+
+  - name: active_hosts
+    expr: count_if(is_active = true)
+    comment: Number of currently active hosts
+    display_name: Active Hosts
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - active count
+      - active host count
+
+  - name: active_rate
+    expr: count_if(is_active = true) * 1.0 / nullif(count(host_id), 0)
+    comment: Percentage of hosts that are currently active
+    display_name: Active Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - activity rate
+      - pct active
+
+  - name: avg_host_rating
+    expr: avg(rating)
+    comment: Average host rating (1.0 to 5.0 scale)
+    display_name: Avg Host Rating
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - average rating
+      - mean host score
+      - host quality score
+
+  - name: high_rated_hosts
+    expr: count_if(rating >= 4.5)
+    comment: Number of hosts with rating 4.5 or above
+    display_name: High-Rated Hosts
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - top hosts
+      - premium hosts
+      - superhost count

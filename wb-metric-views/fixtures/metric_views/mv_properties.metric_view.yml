@@ -2,19 +2,30 @@ version: 1.1
 
 source: "samples.wanderbricks.properties"
 
-comment: "Property listing metrics for WanderBricks vacation rentals"
+comment: >
+  Property inventory and portfolio metrics for WanderBricks vacation rentals.
+  Joined with destinations for geographic analysis. Covers inventory health,
+  capacity, pricing distribution, and supply diversity.
+
+joins:
+  - name: destination
+    source: samples.wanderbricks.destinations
+    'on': source.destination_id = destination.destination_id
+    rely:
+      at_most_one_match: true
 
 dimensions:
   - name: property_type
-    expr: property_type
-    comment: Type of property (e.g., house, apartment)
+    expr: source.property_type
+    comment: Type of property (Historical Place, Ski Resort, Summer Getaway, Urban Year-Round)
     display_name: Property Type
     synonyms:
       - listing type
       - accommodation type
+      - unit type
 
   - name: bedrooms
-    expr: bedrooms
+    expr: source.bedrooms
     comment: Number of bedrooms
     display_name: Bedrooms
     format:
@@ -27,7 +38,7 @@ dimensions:
       - number of bedrooms
 
   - name: bathrooms
-    expr: bathrooms
+    expr: source.bathrooms
     comment: Number of bathrooms
     display_name: Bathrooms
     format:
@@ -38,9 +49,9 @@ dimensions:
     synonyms:
       - bathroom count
 
-  - name: created_at
-    expr: created_at
-    comment: Date the property was listed
+  - name: listed_date
+    expr: source.created_at
+    comment: Date the property was listed on the platform
     display_name: Listed Date
     format:
       type: date
@@ -49,11 +60,40 @@ dimensions:
     synonyms:
       - listing date
       - date added
+      - onboarded date
+
+  - name: destination_name
+    expr: destination.destination
+    comment: Destination city or area where the property is located
+    display_name: Destination
+    synonyms:
+      - city
+      - location
+      - market
+      - area
+
+  - name: destination_country
+    expr: destination.country
+    comment: Country where the property destination is located
+    display_name: Country
+    synonyms:
+      - property country
+      - destination country
+      - nation
+
+  - name: state_or_province
+    expr: destination.state_or_province
+    comment: State, province, or region of the property destination
+    display_name: State/Province
+    synonyms:
+      - region
+      - state
+      - province
 
 measures:
   - name: total_properties
-    expr: count(property_id)
-    comment: Total number of property listings
+    expr: count(source.property_id)
+    comment: Total number of property listings in the portfolio
     display_name: Total Properties
     format:
       type: number
@@ -64,22 +104,56 @@ measures:
     synonyms:
       - property count
       - number of listings
+      - inventory size
+      - supply
 
   - name: avg_base_price
-    expr: avg(base_price)
-    comment: Average base price across listings
+    expr: avg(source.base_price)
+    comment: Average nightly base price across listings
     display_name: Avg Base Price
     format:
       type: number
       decimal_places:
         type: exact
         places: 2
+      prefix: "$"
     synonyms:
       - average price
-      - mean price
+      - mean nightly rate
+      - avg rate
+
+  - name: max_base_price
+    expr: max(source.base_price)
+    comment: Highest base price in the portfolio
+    display_name: Max Base Price
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+    synonyms:
+      - highest price
+      - most expensive
+      - top rate
+
+  - name: min_base_price
+    expr: min(source.base_price)
+    comment: Lowest base price in the portfolio
+    display_name: Min Base Price
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+    synonyms:
+      - lowest price
+      - cheapest
+      - entry rate
 
   - name: total_guest_capacity
-    expr: sum(max_guests)
+    expr: sum(source.max_guests)
     comment: Total guest capacity across all listings
     display_name: Total Guest Capacity
     format:
@@ -91,3 +165,72 @@ measures:
     synonyms:
       - total capacity
       - total max guests
+      - beds available
+
+  - name: avg_bedrooms
+    expr: avg(source.bedrooms)
+    comment: Average number of bedrooms per property
+    display_name: Avg Bedrooms
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - average bedroom count
+      - mean bedrooms
+
+  - name: avg_bathrooms
+    expr: avg(source.bathrooms)
+    comment: Average number of bathrooms per property
+    display_name: Avg Bathrooms
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - average bathroom count
+      - mean bathrooms
+
+  - name: avg_guest_capacity
+    expr: avg(source.max_guests)
+    comment: Average maximum guest capacity per property
+    display_name: Avg Guest Capacity
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - average max guests
+      - avg capacity
+
+  - name: distinct_hosts
+    expr: count(distinct source.host_id)
+    comment: Number of unique hosts with properties listed
+    display_name: Distinct Hosts
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - unique hosts
+      - host count
+      - supply-side partners
+
+  - name: distinct_destinations
+    expr: count(distinct source.destination_id)
+    comment: Number of unique destinations with properties
+    display_name: Markets Served
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - destination count
+      - markets
+      - geographic reach

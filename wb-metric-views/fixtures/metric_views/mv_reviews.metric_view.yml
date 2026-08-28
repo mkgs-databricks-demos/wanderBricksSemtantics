@@ -1,0 +1,176 @@
+version: 1.1
+
+source: "samples.wanderbricks.reviews"
+
+comment: "Guest review and satisfaction metrics for WanderBricks vacation rentals"
+
+filter:
+  expr: "is_deleted = false"
+
+dimensions:
+  - name: review_date
+    expr: created_at
+    comment: Date the review was submitted
+    display_name: Review Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - date reviewed
+      - submitted date
+
+  - name: rating_bucket
+    expr: >
+      CASE
+        WHEN rating >= 4.5 THEN 'Excellent (4.5-5.0)'
+        WHEN rating >= 3.5 THEN 'Good (3.5-4.4)'
+        WHEN rating >= 2.5 THEN 'Average (2.5-3.4)'
+        ELSE 'Poor (1.0-2.4)'
+      END
+    comment: Rating category bucket for guest satisfaction segmentation
+    display_name: Rating Category
+    synonyms:
+      - review tier
+      - satisfaction level
+      - rating group
+      - review category
+
+measures:
+  - name: total_reviews
+    expr: count(review_id)
+    comment: Total number of guest reviews (excluding deleted)
+    display_name: Total Reviews
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - review count
+      - number of reviews
+      - review volume
+
+  - name: avg_rating
+    expr: avg(rating)
+    comment: Average guest rating (1.0 to 5.0 scale)
+    display_name: Avg Rating
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+    synonyms:
+      - average score
+      - mean rating
+      - average stars
+
+  - name: five_star_reviews
+    expr: count_if(rating = 5.0)
+    comment: Number of perfect 5-star reviews
+    display_name: 5-Star Reviews
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - perfect reviews
+      - five star count
+
+  - name: five_star_rate
+    expr: count_if(rating = 5.0) * 1.0 / nullif(count(review_id), 0)
+    comment: Percentage of reviews that are 5 stars
+    display_name: 5-Star Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - perfect score rate
+      - five star percentage
+
+  - name: low_rating_reviews
+    expr: count_if(rating < 3.0)
+    comment: Number of reviews with rating below 3.0
+    display_name: Low Rating Reviews
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - negative reviews
+      - poor reviews
+      - bad reviews
+
+  - name: low_rating_rate
+    expr: count_if(rating < 3.0) * 1.0 / nullif(count(review_id), 0)
+    comment: Percentage of reviews with rating below 3.0
+    display_name: Low Rating Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - negative review rate
+      - dissatisfaction rate
+
+  - name: distinct_reviewers
+    expr: count(distinct user_id)
+    comment: Number of unique guests who left reviews
+    display_name: Distinct Reviewers
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - unique reviewers
+      - reviewing guests
+
+  - name: distinct_reviewed_properties
+    expr: count(distinct property_id)
+    comment: Number of unique properties that have been reviewed
+    display_name: Reviewed Properties
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - properties with reviews
+      - reviewed listings
+
+  - name: avg_reviews_per_property
+    expr: count(review_id) * 1.0 / nullif(count(distinct property_id), 0)
+    comment: Average number of reviews per reviewed property — review density signal
+    display_name: Avg Reviews per Property
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - review density
+      - reviews per listing
+      - coverage depth
+
+  - name: four_plus_star_rate
+    expr: count_if(rating >= 4.0) * 1.0 / nullif(count(review_id), 0)
+    comment: Percentage of reviews rated 4.0 or above — guest satisfaction threshold
+    display_name: 4+ Star Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - high satisfaction rate
+      - good review percentage
+      - positive review rate

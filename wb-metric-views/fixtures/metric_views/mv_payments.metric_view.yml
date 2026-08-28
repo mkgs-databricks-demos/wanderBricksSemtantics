@@ -1,0 +1,194 @@
+version: 1.1
+
+source: "samples.wanderbricks.payments"
+
+comment: "Payment processing metrics for WanderBricks vacation rentals"
+
+dimensions:
+  - name: payment_method
+    expr: payment_method
+    comment: Method used for payment
+    display_name: Payment Method
+    synonyms:
+      - payment type
+      - method of payment
+      - how they paid
+
+  - name: payment_status
+    expr: status
+    comment: Current status of the payment (completed, failed, refunded)
+    display_name: Payment Status
+    synonyms:
+      - status
+      - transaction status
+
+  - name: payment_date
+    expr: payment_date
+    comment: Date and time the payment was processed
+    display_name: Payment Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - transaction date
+      - date paid
+
+measures:
+  - name: total_payments
+    expr: count(payment_id)
+    comment: Total number of payment transactions
+    display_name: Total Payments
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - payment count
+      - number of transactions
+      - transaction volume
+
+  - name: total_payment_amount
+    expr: sum(amount)
+    comment: Total dollar amount processed across all payments
+    display_name: Total Payment Amount
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - total collected
+      - gross payments
+      - total processed
+
+  - name: avg_payment_amount
+    expr: avg(amount)
+    comment: Average payment transaction amount
+    display_name: Avg Payment Amount
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+    synonyms:
+      - average transaction
+      - mean payment
+
+  - name: completed_payments
+    expr: count_if(status = 'completed')
+    comment: Number of successfully completed payments
+    display_name: Completed Payments
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - successful payments
+      - processed payments
+
+  - name: failed_payments
+    expr: count_if(status = 'failed')
+    comment: Number of failed payment attempts
+    display_name: Failed Payments
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - payment failures
+      - declined payments
+
+  - name: refunded_payments
+    expr: count_if(status = 'refunded')
+    comment: Number of refunded payments
+    display_name: Refunded Payments
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+    synonyms:
+      - refunds
+      - refund count
+
+  - name: refund_amount
+    expr: sum(case when status = 'refunded' then amount else 0 end)
+    comment: Total dollar amount refunded
+    display_name: Refund Amount
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - total refunds
+      - refunded amount
+
+  - name: payment_failure_rate
+    expr: count_if(status = 'failed') * 1.0 / nullif(count(payment_id), 0)
+    comment: Percentage of payments that failed
+    display_name: Payment Failure Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - failure rate
+      - decline rate
+
+  - name: refund_rate
+    expr: count_if(status = 'refunded') * 1.0 / nullif(count(payment_id), 0)
+    comment: Percentage of payments that were refunded
+    display_name: Refund Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - refund percentage
+      - refund pct
+
+  - name: net_revenue
+    expr: sum(case when status = 'completed' then amount else 0 end) - sum(case when status = 'refunded' then amount else 0 end)
+    comment: Net collected revenue after subtracting refunds — true cash received
+    display_name: Net Revenue
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - net collected
+      - revenue after refunds
+      - true revenue
+      - cash collected
+
+  - name: completed_amount
+    expr: sum(case when status = 'completed' then amount else 0 end)
+    comment: Total dollar amount from successfully completed payments
+    display_name: Completed Amount
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - collected amount
+      - successful payment total

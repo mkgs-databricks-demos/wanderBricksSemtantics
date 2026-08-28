@@ -1,0 +1,304 @@
+version: 1.1
+
+source: "samples.wanderbricks.bookings"
+
+comment: >
+  Core booking and revenue metrics for WanderBricks vacation rentals.
+  Includes all booking statuses (pending, confirmed, completed, cancelled)
+  to enable cancellation rate analysis alongside revenue KPIs.
+
+dimensions:
+  - name: booking_status
+    expr: status
+    comment: Current status of the booking (pending, confirmed, completed, cancelled)
+    display_name: Booking Status
+    synonyms:
+      - status
+      - reservation status
+      - booking state
+
+  - name: check_in_date
+    expr: check_in
+    comment: Guest check-in date
+    display_name: Check-In Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - arrival date
+      - start date
+
+  - name: check_out_date
+    expr: check_out
+    comment: Guest check-out date
+    display_name: Check-Out Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - departure date
+      - end date
+
+  - name: booking_date
+    expr: created_at
+    comment: Date the booking was created
+    display_name: Booking Date
+    format:
+      type: date
+      date_format: locale_short_month
+      leading_zeros: false
+    synonyms:
+      - reservation date
+      - booked date
+      - created date
+
+  - name: day_of_week
+    expr: date_format(check_in, 'EEEE')
+    comment: Day of week for the check-in (Monday through Sunday)
+    display_name: Day of Week
+    synonyms:
+      - weekday
+      - check-in day
+      - arrival day
+
+  - name: length_of_stay_bucket
+    expr: >
+      CASE
+        WHEN datediff(check_out, check_in) <= 2 THEN '1-2 nights'
+        WHEN datediff(check_out, check_in) <= 6 THEN '3-6 nights'
+        ELSE '7+ nights'
+      END
+    comment: Length of stay segmentation bucket (short, medium, extended)
+    display_name: Stay Length Bucket
+    synonyms:
+      - LOS bucket
+      - stay duration category
+      - nights bucket
+
+measures:
+  - name: total_bookings
+    expr: count(booking_id)
+    comment: Total number of bookings across all statuses
+    display_name: Total Bookings
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - booking count
+      - number of reservations
+      - reservation volume
+
+  - name: confirmed_bookings
+    expr: count_if(status IN ('confirmed', 'completed'))
+    comment: Bookings that were confirmed or completed (not cancelled or pending)
+    display_name: Confirmed Bookings
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - realized bookings
+      - successful bookings
+
+  - name: completed_bookings
+    expr: count_if(status = 'completed')
+    comment: Bookings where the guest completed their stay
+    display_name: Completed Bookings
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - fulfilled bookings
+      - stays completed
+
+  - name: cancellation_rate
+    expr: count_if(status = 'cancelled') * 1.0 / nullif(count(booking_id), 0)
+    comment: Percentage of bookings that were cancelled — affects realized occupancy and cash flow
+    display_name: Cancellation Rate
+    format:
+      type: percent
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - cancel rate
+      - cancellation percentage
+      - cancelled bookings pct
+
+  - name: gross_booking_value
+    expr: sum(total_amount)
+    comment: Total booking revenue across all statuses (GBV) — portfolio-level topline
+    display_name: Gross Booking Value
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - GBV
+      - gross revenue
+      - total sales
+      - total booking amount
+
+  - name: realized_revenue
+    expr: sum(case when status IN ('confirmed', 'completed') then total_amount else 0 end)
+    comment: Revenue from non-cancelled bookings only
+    display_name: Realized Revenue
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+      abbreviation: compact
+    synonyms:
+      - net revenue
+      - confirmed revenue
+      - actual revenue
+
+  - name: avg_booking_value
+    expr: avg(total_amount)
+    comment: Average revenue per booking (all statuses)
+    display_name: Avg Booking Value
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+    synonyms:
+      - average order value
+      - avg revenue per booking
+      - ABV
+
+  - name: revenue_per_night
+    expr: sum(case when status != 'cancelled' then total_amount else 0 end) / nullif(sum(case when status != 'cancelled' then datediff(check_out, check_in) else 0 end), 0)
+    comment: Average revenue per occupied night — vacation-rental proxy for ADR
+    display_name: Revenue per Night (ADR)
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 2
+      prefix: "$"
+    synonyms:
+      - ADR
+      - average daily rate
+      - nightly rate
+      - rate per night
+
+  - name: room_nights_sold
+    expr: sum(case when status != 'cancelled' then datediff(check_out, check_in) else 0 end)
+    comment: Total occupied room-nights (demand) — excluding cancellations
+    display_name: Room Nights Sold
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - demand
+      - occupied nights
+      - nights sold
+      - room night demand
+
+  - name: avg_stay_duration
+    expr: avg(datediff(check_out, check_in))
+    comment: Average length of stay in nights (ALOS)
+    display_name: Avg Length of Stay
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+      suffix: " nights"
+    synonyms:
+      - ALOS
+      - average nights
+      - avg length of stay
+      - mean stay duration
+
+  - name: avg_booking_lead_time
+    expr: avg(datediff(check_in, cast(created_at as date)))
+    comment: Average days between booking creation and check-in — drives pricing strategy
+    display_name: Avg Booking Lead Time
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+      suffix: " days"
+    synonyms:
+      - lead time
+      - booking window
+      - advance purchase
+      - days before arrival
+
+  - name: avg_guests_per_booking
+    expr: avg(guests_count)
+    comment: Average number of guests per booking
+    display_name: Avg Guests Per Booking
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 1
+    synonyms:
+      - average party size
+      - avg group size
+
+  - name: total_guest_nights
+    expr: sum(guests_count * datediff(check_out, check_in))
+    comment: Total guest-nights across all bookings (guests x nights)
+    display_name: Total Guest-Nights
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - guest nights
+      - occupied guest-nights
+
+  - name: distinct_guests
+    expr: count(distinct user_id)
+    comment: Number of unique guests who made bookings
+    display_name: Unique Guests
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - distinct bookers
+      - unique users
+      - guest count
+
+  - name: distinct_properties_booked
+    expr: count(distinct property_id)
+    comment: Number of unique properties that received bookings
+    display_name: Properties Booked
+    format:
+      type: number
+      decimal_places:
+        type: exact
+        places: 0
+      abbreviation: compact
+    synonyms:
+      - active properties
+      - booked listings
